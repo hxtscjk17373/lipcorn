@@ -8,14 +8,26 @@
         <version>2.4.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.learn</groupId>
+    <groupId>com.hxtscjk</groupId>
     <artifactId>lipcorn</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>lipcorn</name>
     <description>Demo project for Spring Boot</description>
     <properties>
         <java.version>1.8</java.version>
+        <simbot.version>2.0.3</simbot.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>love.forte.simple-robot</groupId>
+                <artifactId>parent</artifactId>
+                <version>${simbot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -45,6 +57,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>love.forte.simple-robot</groupId>
+            <artifactId>component-mirai</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
