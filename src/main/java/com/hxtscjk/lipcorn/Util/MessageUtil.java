@@ -38,7 +38,7 @@ public class MessageUtil {
      * @return
      */
     public String getCommandText(String message) {
-        String commandText = new String();
+        String commandText;
         //消息中首个空格位置
         int blankPosition = message.indexOf(' ');
         commandText = message.substring(blankPosition+1);

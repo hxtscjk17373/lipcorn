@@ -15,7 +15,9 @@
     <description>Demo project for Spring Boot</description>
     <properties>
         <java.version>1.8</java.version>
-        <simbot.version>2.0.3</simbot.version>
+        <simbot.version>2.2.1</simbot.version>
+        <swagger.version>2.7.0</swagger.version>
+        <kotlin.version>1.4.30</kotlin.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -88,10 +90,46 @@
             <version>1.2.74</version>
         </dependency>
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.5.22</version>
-            <scope>compile</scope>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>${swagger.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--simbot以spingboot启动所需依赖-->
+        <dependency>
+            <groupId>love.forte.simple-robot</groupId>
+            <artifactId>core-spring-boot-starter</artifactId>
+            <version>2.0.9-dev.1</version>
+        </dependency>
+        <dependency>
+            <groupId>love.forte.simple-robot</groupId>
+            <artifactId>component-mirai-spring-boot-starter</artifactId>
+            <version>2.0.9-dev.1</version>
+        </dependency>
+
+        <!-- swagger2-UI-->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.2.10</version>
+        </dependency>
+
+        <!--与simple-robot相匹配的kotlin，防止类缺失异常 -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
 
     </dependencies>

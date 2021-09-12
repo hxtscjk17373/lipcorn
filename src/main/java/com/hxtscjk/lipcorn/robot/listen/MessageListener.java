@@ -2,14 +2,18 @@ package com.hxtscjk.lipcorn.robot.listen;
 
 import com.hxtscjk.lipcorn.Util.MessageUtil;
 import love.forte.common.ioc.annotation.Beans;
+import love.forte.simbot.annotation.Listen;
+import love.forte.simbot.annotation.Listener;
 import love.forte.simbot.annotation.OnGroup;
 import love.forte.simbot.annotation.OnPrivate;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.message.events.PrivateMsg;
 import love.forte.simbot.api.sender.MsgSender;
 import love.forte.simbot.api.sender.Sender;
+import org.springframework.stereotype.Component;
 
 @Beans
+@Component
 public class MessageListener {
 
     @OnGroup
