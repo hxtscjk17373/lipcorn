@@ -1,5 +1,8 @@
 package com.hxtscjk.lipcorn.Util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MessageUtil {
 
     /**
@@ -43,5 +46,11 @@ public class MessageUtil {
         int blankPosition = message.indexOf(' ');
         commandText = message.substring(blankPosition+1);
         return commandText;
+    }
+
+    public static List<String> stringToList(String str) {
+        List<String> list = new ArrayList<>();
+        list.add(str);
+        return list;
     }
 }
