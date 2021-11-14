@@ -3,15 +3,20 @@ package com.hxtscjk.lipcorn.service;
 import cn.hutool.core.collection.ListUtil;
 import com.hxtscjk.lipcorn.Util.MessageUtil;
 import com.hxtscjk.lipcorn.bean.BlindDateBean;
+import com.hxtscjk.lipcorn.bean.MemberNickBean;
 import com.hxtscjk.lipcorn.mapper.BlindDateMapper;
+import com.hxtscjk.lipcorn.mapper.MemberNickMapper;
 import love.forte.common.ioc.annotation.Beans;
 import love.forte.simbot.annotation.Listener;
 import love.forte.simbot.annotation.OnGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.IdGenerator;
 
+import javax.annotation.PostConstruct;
+import javax.swing.text.StyledEditorKit;
 import java.util.*;
 
 @Service
@@ -20,7 +25,27 @@ public class BlindDateService {
     @Autowired
     private BlindDateMapper blindDateMapper;
 
+    @Autowired
+    private MemberNickMapper memberNickMapper;
+
+    private Map<String, String> nickMap = new HashMap<>();
+
+    @PostConstruct
+    public void getAllNick() {
+        nickMap.clear();
+        List<MemberNickBean> nickList = memberNickMapper.selectAll();
+        if (!CollectionUtils.isEmpty(nickList)) {
+            for (MemberNickBean memberNick : nickList) {
+                //TODO: nickname后续需要修改为逗号分隔的字符串，此处需获取mainNick
+                nickMap.put(memberNick.getQqNumber(), memberNick.getNickName());
+            }
+        }
+    }
+
     public List<String> switchForOptions(String qqNumber, String playerInput) {
+        if (playerInput.equals("开始分配") && qqNumber.equals("540248302")) {
+            return getCoupleInf();
+        }
         if (playerInput.equals("菜单")) {
             List<String> list = new ArrayList<>();
             list.add("1.游戏说明");
@@ -107,6 +132,93 @@ public class BlindDateService {
         }
         blindDateMapper.insert(blindDateBean);
         return "耶！成功辣！";
+    }
+
+    public List<String> getCoupleInf() {
+        List <BlindDateBean> list = blindDateMapper.selectAll();
+        List <String> successList = new ArrayList<>();//成功列表
+        List <String> adjustList = new ArrayList<>();//调剂列表
+        List <BlindDateBean> waitList = new ArrayList<>();//等待列表
+        List <String> failList = new ArrayList<>();//失败列表
+        //打乱list
+        Collections.shuffle(list);
+        int tryCount = list.size();
+        while (!CollectionUtils.isEmpty(list)) {
+            BlindDateBean member = list.get(0);
+            list.remove(member);
+            //取得第一位成员后将其去掉
+            boolean found = false;
+            for (BlindDateBean chosen : list) {
+                if (isPerfectMatching(member, chosen)) {
+                    String successStr = nickMap.get(member.getQqNumber()) + "(" + member.getSex() + ")" + "&" + nickMap.get(chosen.getQqNumber()) + "(" + chosen.getSex() + ")";
+                    successList.add(successStr);
+                    list.remove(chosen);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                //如果匹配失败，放入失败队列等待调剂
+                waitList.add(member);
+            }
+        }
+        //此处结束后，得出匹配成功列表，开始进行调剂
+        while (!CollectionUtils.isEmpty(waitList)) {
+            BlindDateBean member = waitList.get(0);
+            waitList.remove(member);
+            //取得第一位成员后将其去掉
+            boolean found = false;
+            for (BlindDateBean chosen : waitList) {
+                if (isPerfectMatching(member, chosen) || isAdjustMatching(member, chosen)) {
+                    String successStr = nickMap.get(member.getQqNumber()) + "&" + nickMap.get(chosen.getQqNumber());
+                    adjustList.add(successStr);
+                    waitList.remove(chosen);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                //如果调剂失败，进入solo列表
+                failList.add(nickMap.get(member.getQqNumber()));
+            }
+        }
+        return printCoupleInf(successList, adjustList, failList);
+    }
+    private List<String> printCoupleInf(List<String> successList, List<String> adjustList, List<String> failList) {
+        List<String> printStr = new ArrayList<>();
+        printStr.add("配对结果如下：");
+        printStr.add("------");
+        printStr.add("匹配成功：");
+        if (!CollectionUtils.isEmpty(successList))
+            printStr.addAll(successList);
+        else printStr.add("无");
+        printStr.add("------");
+        printStr.add("调剂成功：");
+        if (!CollectionUtils.isEmpty(adjustList))
+            printStr.addAll(adjustList);
+        else printStr.add("无");
+        printStr.add("------");
+        printStr.add("solo：");
+        if (!CollectionUtils.isEmpty(failList))
+            printStr.addAll(failList);
+        else printStr.add("无");
+        printStr.add("------");
+        return MessageUtil.stringToList(String.join( "\n", printStr));
+    }
+
+    private Boolean isPerfectMatching(BlindDateBean member, BlindDateBean chosen) {
+        return isSingleMatching(chosen.getOrientation(), member.getSex()) && isSingleMatching(member.getOrientation(), chosen.getSex());
+    }
+
+    private Boolean isAdjustMatching(BlindDateBean member, BlindDateBean chosen) {
+        return member.getOrientation().equals("是") && chosen.getOrientation().equals("是");
+    }
+
+    private Boolean isSingleMatching(String orientation, String sex) {
+        if (orientation.equals("双")) {
+            return true;
+        }
+        else return orientation.equals(sex);
     }
 
     private static String getUuid() {
