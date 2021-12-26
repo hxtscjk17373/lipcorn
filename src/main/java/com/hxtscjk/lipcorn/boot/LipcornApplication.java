@@ -11,7 +11,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 
 @EnableSimbot
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.hxtscjk.lipcorn.robot.listen", "com.hxtscjk.lipcorn.service"})
+@ComponentScan(basePackages = {"com.hxtscjk.lipcorn.listen", "com.hxtscjk.lipcorn.service"})
 @MapperScan("com.hxtscjk.lipcorn.mapper")
 public class LipcornApplication {
 

@@ -44,6 +44,7 @@ public class BlindDateService {
 
     public List<String> switchForOptions(String qqNumber, String playerInput) {
         if (playerInput.equals("开始分配") && qqNumber.equals("540248302")) {
+            getAllNick();
             return getCoupleInf();
         }
         if (playerInput.equals("菜单")) {
@@ -170,7 +171,7 @@ public class BlindDateService {
             boolean found = false;
             for (BlindDateBean chosen : waitList) {
                 if (isPerfectMatching(member, chosen) || isAdjustMatching(member, chosen)) {
-                    String successStr = nickMap.get(member.getQqNumber()) + "&" + nickMap.get(chosen.getQqNumber());
+                    String successStr = nickMap.get(member.getQqNumber()) + "(" + member.getSex() + ")" + "&" + nickMap.get(chosen.getQqNumber()) + "(" + chosen.getSex() + ")";
                     adjustList.add(successStr);
                     waitList.remove(chosen);
                     found = true;
@@ -211,7 +212,7 @@ public class BlindDateService {
     }
 
     private Boolean isAdjustMatching(BlindDateBean member, BlindDateBean chosen) {
-        return member.getOrientation().equals("是") && chosen.getOrientation().equals("是");
+        return member.getObeyAdjust().equals("是") && chosen.getObeyAdjust().equals("是");
     }
 
     private Boolean isSingleMatching(String orientation, String sex) {
