@@ -4,7 +4,6 @@ import lombok.Data;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
-import java.util.Date;
 
 @Data
 @Table(name = "blind_date_game")
@@ -29,7 +28,7 @@ public class BlindDateBean extends BaseBean {
     private String orientation;
 
     /**
-     * 演唱会场次
+     * 是否服从调剂（是/否）
      */
     @Column(name = "obey_adjust")
     private String obeyAdjust;
