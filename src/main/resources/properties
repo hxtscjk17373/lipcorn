@@ -1,0 +1,15 @@
+# mysql，略
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=
+
+# 捞鱼配置，依次是发送间隔，发送者雷网账号，发送者雷网密码，邀请语句
+catch.fish.time.interval=
+catch.fish.my.saolei.account=
+catch.fish.my.saolei.password=
+catch.fish.invite.sentence=
+
+# 机器人账号密码，格式为账号+冒号+密码
+simbot.core.bots=
+

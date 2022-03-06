@@ -80,6 +80,16 @@ public class BlindDateService implements LipcornConst {
                 list.add("    请谨慎选择是否服从调剂，若恰好无合适CP分配，您将solo！");
                 return MessageUtil.stringToList(String.join("\n", list));
             }
+            case "报名格式": {
+                List<String> list = new ArrayList<>();
+                list.add("报名格式");
+                list.add("相亲 性别+取向+是否服从调剂");
+                list.add("性别：男/女");
+                list.add("取向：男/女/双");
+                list.add("是否服从调剂：是/否");
+                list.add("示例：[相亲 男+女+是]");
+                return MessageUtil.stringToList(String.join( "\n", list));
+            }
             case "个人信息": {
                 List<String> list = new ArrayList<>();
                 BlindDateBean blindDateBean = new BlindDateBean();
