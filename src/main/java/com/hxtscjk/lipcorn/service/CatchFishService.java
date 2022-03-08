@@ -186,7 +186,7 @@ public class CatchFishService {
                     //鱼已收到过捞鱼信息但没加群(1)
                     Date lastDate = existFish.getLastSend();
                     Date nowDate = new Date();
-                    if (nowDate.getTime() - Long.parseLong(this.sendInterval) < lastDate.getTime()) {
+                    if (nowDate.getTime() - Long.parseLong(this.sendInterval) > lastDate.getTime()) {
                         //距上次已半年以上
                         updateFishInf(fish, existFish, 1);
                     }
