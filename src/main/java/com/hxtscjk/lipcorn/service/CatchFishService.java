@@ -212,6 +212,7 @@ public class CatchFishService {
         oneFish = oneFish.stream().sorted(Comparator.comparing(HappyFishRecordBean::getPlayerId)).collect(Collectors.toList());
         boolean flag = true;
         while (flag) {
+            boolean flag1 = true;
             for (int i = 0; i < oneFish.size() -1; i++) {
                 if (oneFish.get(i).getPlayerId().equals(oneFish.get(i+1).getPlayerId())) {
                     if (oneFish.get(i).getRecordTime() <= oneFish.get(i+1).getRecordTime()) {
@@ -219,10 +220,13 @@ public class CatchFishService {
                     } else {
                         oneFish.remove(i);
                     }
+                    flag1 = false;
                     break;
                 }
             }
-            flag = false;
+            if (flag1) {
+                flag = false;
+            }
         }
         return oneFish;
     }
@@ -337,6 +341,7 @@ public class CatchFishService {
      * @throws InterruptedException
      */
     public List<String> sendMessageWithChrome(List<String> playerIds) throws InterruptedException {
+        //WebDriverManager.chromedriver().setup();
         playerIds.add("20998");
         List<HappyFishRecordBean> allFishList = happyFishRecordMapper.selectAll();
         List<String> resultList = new ArrayList<>();
@@ -359,6 +364,7 @@ public class CatchFishService {
                 if (changeBean != null) {
                     changeBean.setLastSend(new Date());
                     changeBean.setSendCount(changeBean.getSendCount() + 1);
+                    changeBean.setPlayerStatus(1);
                     if (!id.equals("20998")) {
                         happyFishRecordMapper.updateByPrimaryKeySelective(changeBean);
                         resultList.add(id);
@@ -369,7 +375,6 @@ public class CatchFishService {
         }
         //退出登录
         webDriver.get("http://saolei.wang/Main/Index.asp");
-        webDriver.findElement(By.xpath("/html/body/table[1]/tbody/tr/td[2]/a[1]")).click();
         webDriver.quit();
         return resultList;
     }

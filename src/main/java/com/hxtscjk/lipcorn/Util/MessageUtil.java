@@ -11,14 +11,23 @@ public class MessageUtil {
      * @return
      */
     public int checkMessage(String message) {
-        int blankPosition = message.contains(" ") ? message.indexOf(' ') : -1;
-        //若存在空格且空格不在首位，则认定为可能是实用指令语句，返回类型1
-        if(blankPosition >=1) {
+        if (!message.contains(" ")) {
             return 1;
         }
-        //若不是视为其他指令，返回类型2
-        else {
-            return 2;
+        String[] msg = message.split(" ");
+        return msg.length;
+    }
+
+    private String getCommand(String message, int pos) {
+        if ((!message.contains(" ")) && pos == 1) {
+            return message;
+        } else {
+            String[] msg = message.split(" ");
+            if (msg.length >= pos) {
+                return msg[pos - 1];
+            } else {
+                return null;
+            }
         }
     }
 
@@ -28,11 +37,7 @@ public class MessageUtil {
      * @return
      */
     public String getCommandType(String message) {
-        String commandType = new String();
-        //消息中首个空格位置
-        int blankPosition = message.indexOf(' ');
-        commandType = message.substring(0, blankPosition);
-        return commandType;
+        return getCommand(message, 1);
     }
 
     /**
@@ -41,11 +46,16 @@ public class MessageUtil {
      * @return
      */
     public String getCommandText(String message) {
-        String commandText;
-        //消息中首个空格位置
-        int blankPosition = message.indexOf(' ');
-        commandText = message.substring(blankPosition+1);
-        return commandText;
+        return getCommand(message, 2);
+    }
+
+    /**
+     * 获取指令值
+     * @param message
+     * @return
+     */
+    public String getCommandValue(String message) {
+        return getCommand(message, 3);
     }
 
     public static List<String> stringToList(String str) {

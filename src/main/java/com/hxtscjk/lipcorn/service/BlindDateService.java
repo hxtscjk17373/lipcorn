@@ -10,9 +10,11 @@ import com.hxtscjk.lipcorn.mapper.MemberNickMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BlindDateService implements LipcornConst {
@@ -55,7 +57,7 @@ public class BlindDateService implements LipcornConst {
      * @param playerInput
      * @return
      */
-    public List<String> switchForOptions(String qqNumber, String playerInput) {
+    public List<String> switchForOptions(String qqNumber, String playerInput, String value) {
         if (playerInput.equals("开始分配") && qqNumber.equals("540248302")) {
             //开始分配时再导入一次
             getAllNick();
@@ -67,7 +69,7 @@ public class BlindDateService implements LipcornConst {
                 list.add("1.游戏说明");
                 list.add("2.个人信息");
                 list.add("3.报名格式");
-                list.add("4.个人CP历史");
+                list.add("4.CP历史 (xx)");
                 list.add("注：选项前都要加上相亲二字，用空格分隔。例[相亲 游戏说明]");
                 return MessageUtil.stringToList(String.join("\n", list));
             }
@@ -105,29 +107,57 @@ public class BlindDateService implements LipcornConst {
                 }
                 return MessageUtil.stringToList(String.join("\n", list));
             }
-            case "个人CP历史": {
-                List<String> list = new ArrayList<>();
-                List<BlindDateResult> resultList = blindDateResultService.queryMemberCPRecord(qqNumber);
-                if (CollectionUtils.isEmpty(resultList)) {
-                    list.add("没有记录哦TAT");
-                } else {
-                    list.add(nickMap.get(qqNumber) + "共参与" + resultList.size() + "轮游戏，CP记录如下：");
-                    for (BlindDateResult result : resultList) {
-                        StringBuilder perRecord = new StringBuilder();
-                        perRecord.append(result.getMatchDate()).append("：");
-                        if (result.getMatchType().equals(MATCH_SOLO)) {
-                            perRecord.append("solo");
-                        } else {
-                            perRecord.append(nickMap.get(result.getMatchNumber()));
-                        }
-                        list.add(perRecord.toString());
+            case "CP历史": {
+                if (StringUtils.hasLength(value)) {
+                    String findQqNumber = nickReverseMap.get(value);
+                    if (StringUtils.hasLength(findQqNumber)) {
+                        return getCpRecord(findQqNumber);
                     }
                 }
-                return MessageUtil.stringToList(String.join("\n", list));
+                else {
+                    return getCpRecord(qqNumber);
+                }
             }
             default:
                 return MessageUtil.stringToList(insertGameInformation(qqNumber, playerInput));
         }
+    }
+
+    private List<String> getCpRecord(String qqNumber) {
+        List<String> list = new ArrayList<>();
+        List<BlindDateResult> resultList = blindDateResultService.queryMemberCPRecord(qqNumber);
+        List<BlindDateResult> resultListTop3 = resultList.stream().sorted(Comparator.comparing(BlindDateResult::getCreateTime).reversed()).limit(3).collect(Collectors.toList());
+        List<String> resultQqs = resultList.stream().map(BlindDateResult::getMatchNumber).collect(Collectors.toList());
+        Map<Integer, List<String>> resultTimes = getResultTimes(resultQqs);
+        BlindDateBean blindDateBean = new BlindDateBean();
+        blindDateBean.setQqNumber(qqNumber);
+        blindDateBean = blindDateMapper.selectOne(blindDateBean);
+        if (CollectionUtils.isEmpty(resultList) || blindDateBean == null) {
+            list.add("没有记录哦TAT");
+        } else {
+            list.add(nickMap.get(qqNumber) + "（" + blindDateBean.getSex() + "/"
+                    + blindDateBean.getOrientation() + "/"
+                    + blindDateBean.getObeyAdjust() +"）");
+            list.add("共参与" + resultList.size() + "轮游戏，最近CP记录如下：");
+            for (BlindDateResult result : resultListTop3) {
+                StringBuilder perRecord = new StringBuilder();
+                perRecord.append(result.getMatchDate()).append("：");
+                if (result.getMatchType().equals(MATCH_SOLO)) {
+                    perRecord.append("solo");
+                } else {
+                    perRecord.append(nickMap.get(result.getMatchNumber()));
+                }
+                list.add(perRecord.toString());
+            }
+            list.add("总计记录：");
+            for (int i = resultList.size(); i >= 0 ; i--) {
+                if (!CollectionUtils.isEmpty(resultTimes.get(i))) {
+                    String outputStr = String.join("、", resultTimes.get(i));
+                    list.add("" + i + "次：" + outputStr);
+                }
+            }
+        }
+        return MessageUtil.stringToList(String.join("\n", list));
     }
 
     /**
@@ -297,6 +327,38 @@ public class BlindDateService implements LipcornConst {
         else {
             printStr.add("无");
         }
+    }
+
+    private Map<Integer, List<String>> getResultTimes(List<String> list) {
+        Set<String> set = new HashSet<>(list);
+        Map<String,Integer> map = new HashMap<>();
+        for (String str : list){
+            //计数器，用来记录数据的个数
+            int i = 1;
+            if (map.get(str) != null){
+                i = map.get(str) + 1;
+            }
+            map.put(str, i);
+        }
+        Map<Integer, List<String>> resultMap = new HashMap<>();
+        for (String qq : set) {
+            String nick;
+            if (StringUtils.hasLength(qq)) {
+                nick = nickMap.get(qq);
+            } else {
+                nick = "solo";
+            }
+            if (CollectionUtils.isEmpty(resultMap.get(map.get(qq)))) {
+                List<String> stringList = new ArrayList<>();
+                stringList.add(nick);
+                resultMap.put(map.get(qq), stringList);
+            } else {
+                List<String> stringList = resultMap.get(map.get(qq));
+                stringList.add(nick);
+                resultMap.put(map.get(qq), stringList);
+            }
+        }
+        return resultMap;
     }
 
     /**
