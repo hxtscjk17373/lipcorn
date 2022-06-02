@@ -58,6 +58,7 @@ public class BlindDateService implements LipcornConst {
      * @return
      */
     public List<String> switchForOptions(String qqNumber, String playerInput, String value) {
+        playerInput = playerInput.toLowerCase();
         if (playerInput.equals("开始分配") && qqNumber.equals("540248302")) {
             //开始分配时再导入一次
             getAllNick();
@@ -107,7 +108,7 @@ public class BlindDateService implements LipcornConst {
                 }
                 return MessageUtil.stringToList(String.join("\n", list));
             }
-            case "CP历史": {
+            case "cp历史": {
                 if (StringUtils.hasLength(value)) {
                     String findQqNumber = nickReverseMap.get(value);
                     if (StringUtils.hasLength(findQqNumber)) {

@@ -89,6 +89,7 @@ public class MemberCommonService {
     }
 
     public List<String> fillBlankMember(String inputStr, String qq) {
+        inputStr = inputStr.replace("X", "x");
         boolean flag = checkTodayTimes(qq);
         if (!flag) {
             return new ArrayList<>();

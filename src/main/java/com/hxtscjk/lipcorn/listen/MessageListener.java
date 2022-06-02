@@ -38,10 +38,10 @@ public class MessageListener implements LipcornConst {
     private CatchFishService catchFishService;
 
     @OnGroup
-    @Filter(groups = {GROUP_YELLOW_NUMBER,GROUP_TEST_NUMBER})
+    @Filter(groups = {GROUP_YELLOW_NUMBER, GROUP_TEST_NUMBER})
     public void GroupMsg(GroupMsg groupMsg, MsgSender sender) {
         log.info("received message : {}", groupMsg.getMsg());
-        String msg = groupMsg.getMsg().toUpperCase();
+        String msg = groupMsg.getMsg();
         MessageUtil messageUtil = new MessageUtil();
         int messageType = messageUtil.checkMessage(msg);
         if (messageType == 1) {
@@ -51,8 +51,7 @@ public class MessageListener implements LipcornConst {
             if (msg.equals("随机群员")) {
                 sendMessage(memberCommonService.randMembers("1", groupMsg.getAccountInfo().getAccountCode()), groupMsg, sender);
             }
-        }
-        else if(messageType == 2 || messageType == 3) {
+        } else if (messageType == 2 || messageType == 3) {
             String commandType = messageUtil.getCommandType(msg);
             String commandText = messageUtil.getCommandText(msg);
             String commandValue = messageUtil.getCommandValue(msg);
@@ -75,7 +74,7 @@ public class MessageListener implements LipcornConst {
     @Filter(groups = {GROUP_CATCH_FISH_NUMBER, GROUP_TEST_NUMBER})
     public void GroupMsg2(GroupMsg groupMsg, MsgSender sender) throws InterruptedException {
         log.info("received message : {}", groupMsg.getMsg());
-        String msg = groupMsg.getMsg().toUpperCase();
+        String msg = groupMsg.getMsg();
         MessageUtil messageUtil = new MessageUtil();
         int messageType = messageUtil.checkMessage(msg);
         if (messageType == 1) {
@@ -91,14 +90,25 @@ public class MessageListener implements LipcornConst {
             if (msg.equals("全部法师")) {
                 sendMessage("假装打错字是吧，哼哼，被我发现了！", groupMsg, sender);
             }
-        }
-        else if (messageType == 2 || messageType == 3) {
+            if (msg.equals("菜单")) {
+                sendMessage(catchFishService.getMenu(), groupMsg, sender);
+            }
+        } else if (messageType == 2 || messageType == 3) {
             String commandType = messageUtil.getCommandType(msg);
             String commandText = messageUtil.getCommandText(msg);
             String commandValue = messageUtil.getCommandValue(msg);
             //测试内容是否已分离出
             if (commandType.equals("删除")) {
                 sendMessage(catchFishService.insertBlackList(commandText), groupMsg, sender);
+            }
+            if (commandType.equals("捞鱼")) {
+                sendMessage(catchFishService.insertCatchList(commandText), groupMsg, sender);
+            }
+            if (commandType.equals("强制捞鱼")) {
+                sendMessage(catchFishService.insertCatchListForce(commandText), groupMsg, sender);
+            }
+            if (commandType.equals("状态")) {
+                sendMessage(catchFishService.getFishStatus(commandText), groupMsg, sender);
             }
         }
     }
@@ -144,33 +154,6 @@ public class MessageListener implements LipcornConst {
             for (String message : list) {
                 sender.SENDER.sendGroupMsg(groupMsg, message);
             }
-        }
-    }
-
-    public static void main(String[] args) {
-        int cnt = 0;//计数
-        int i = 0;
-        int currentNumber = 1;//神奇的操作，当前数字初始设为1
-        int[] resultNumber = new int[10];//结果数组
-        char[] inputString = "6+13+51+51+81".toCharArray();//输入的算式字符串
-        while (i < inputString.length) {
-            if (inputString[i] >= '0' && inputString[i] <= '9') {//如果当前位是数字
-                //如果当前位是最后一个字符，或者下一位是符号
-                if (i == inputString.length - 1 ||
-                        (!(inputString[i + 1] >= '0' && inputString[i + 1] <= '9'))) {
-                    //神奇的操作，将第cnt位的数字设置为下面这个算式的值
-                    resultNumber[cnt++] = currentNumber + inputString[i] - '0' - 1;
-                    currentNumber = 1;//重设当前数字
-                } else {
-                    //当前位的下一位是数字，就进行如下神奇操作
-                    currentNumber *= 10;
-                    currentNumber += inputString[i] - '0';
-                }
-            }
-            i++;
-        }
-        for (i = 0; i < cnt; i++) {
-            System.out.println("result-" + i + "=" + resultNumber[i]);
         }
     }
 }

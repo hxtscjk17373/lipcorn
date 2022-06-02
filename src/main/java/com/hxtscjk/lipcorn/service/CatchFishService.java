@@ -22,10 +22,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -78,6 +76,16 @@ public class CatchFishService {
         return MessageUtil.stringToList(String.join( "\n", result));
     }
 
+    public List<String> getMenu() {
+        List<String> result = new ArrayList<>();
+        result.add("1.捞鱼");
+        result.add("2.删除 id");
+        result.add("3.捞鱼 id");
+        result.add("4.强制捞鱼 id");
+        result.add("5.状态 id");
+        return MessageUtil.stringToList(String.join( "\n", result));
+    }
+
     public List<String> insertBlackList(String id) {
         List<String> list = new ArrayList<>();
         try {
@@ -105,6 +113,119 @@ public class CatchFishService {
         return MessageUtil.stringToList(String.join( "\n", list));
     }
 
+    public List<String> getFishStatus(String id) {
+        List<String> list = new ArrayList<>();
+        try {
+            Long l = Long.parseLong(id);
+        } catch (Exception e) {
+            list.add("输入错误，请输入玩家id数字");
+            return MessageUtil.stringToList(String.join( "\n", list));
+        }
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        if (exist != null) {
+            list.add("id：" + exist.getPlayerId());
+            list.add("姓名：" + exist.getPlayerName());
+            String status = "";
+            if (exist.getPlayerStatus() == 1) {
+                status = "已捞过";
+            } else if (exist.getPlayerStatus() == 2) {
+                status = "已在群内";
+            } else if (exist.getPlayerStatus() == 99) {
+                status = "黑名单";
+            }
+            list.add("状态：" + status);
+            if (exist.getPlayerStatus() == 1) {
+                list.add("被捞次数：" + exist.getSendCount());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                list.add("上次被捞日期：" + sdf.format(exist.getLastSend()));
+            }
+        } else {
+            list.add("未查询到相关记录");
+        }
+        return MessageUtil.stringToList(String.join( "\n", list));
+    }
+
+    public List<String> insertCatchList(String id) {
+        List<String> list = new ArrayList<>();
+        try {
+            Long l = Long.parseLong(id);
+        } catch (Exception e) {
+            list.add("输入错误，请输入玩家id数字");
+            return MessageUtil.stringToList(String.join( "\n", list));
+        }
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        if (exist != null) {
+            if (exist.getPlayerStatus() == 2) {
+                list.add("[" + id + "]已在群内");
+            } else if (exist.getPlayerStatus() == 99) {
+                list.add("[" + id + "]在黑名单内，不可捞");
+            } else if (exist.getPlayerStatus() == 1) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date lastDate = exist.getLastSend();
+                Date nextDate = new Date(lastDate.getTime() + Long.parseLong(sendInterval));
+                String lastDateTime = sdf.format(lastDate);
+                String nextDateTime = sdf.format(nextDate);
+                list.add("[" + id + "]已于" + lastDateTime + "捞过，根据当前配置，解锁时间为"
+                        + nextDateTime + "以后，若仍需捞鱼，请发送【强制捞鱼 " + id + "】");
+            }
+        } else {
+            HappyFishRecordBean fish = new HappyFishRecordBean();
+            fish.setPlayerId(id);
+            fish.setPlayerName("手动捞鱼");
+            insertFishInf(fish, 1);
+            List<String> fishId = new ArrayList<>();
+            fishId.add(id);
+            try {
+                sendMessageWithChrome(fishId);
+                list.add("发送成功");
+            } catch (Exception e) {
+                list.add("发送失败，请检查代码！");
+            }
+        }
+        return MessageUtil.stringToList(String.join( "\n", list));
+    }
+
+    public List<String> insertCatchListForce(String id) {
+        List<String> list = new ArrayList<>();
+        try {
+            Long l = Long.parseLong(id);
+        } catch (Exception e) {
+            list.add("输入错误，请输入玩家id数字");
+            return MessageUtil.stringToList(String.join( "\n", list));
+        }
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        if (exist != null) {
+            if (exist.getPlayerStatus() == 2) {
+                list.add("[" + id + "]已在群内");
+            } else if (exist.getPlayerStatus() == 99) {
+                list.add("[" + id + "]在黑名单内，不可捞");
+            } else if (exist.getPlayerStatus() == 1) {
+                List<String> fishId = new ArrayList<>();
+                fishId.add(id);
+                try {
+                    sendMessageWithChrome(fishId);
+                    list.add("发送成功");
+                } catch (Exception e) {
+                    list.add("发送失败，请检查代码！");
+                }
+            }
+        } else {
+            HappyFishRecordBean fish = new HappyFishRecordBean();
+            fish.setPlayerId(id);
+            fish.setPlayerName("手动捞鱼");
+            insertFishInf(fish, 1);
+            List<String> fishId = new ArrayList<>();
+            fishId.add(id);
+            try {
+                sendMessageWithChrome(fishId);
+                list.add("发送成功");
+            } catch (Exception e) {
+                list.add("发送失败，请检查代码！");
+            }
+        }
+        return MessageUtil.stringToList(String.join( "\n", list));
+    }
+
     private void updateVersion() {
         HappyFishVersionBean versionBean = new HappyFishVersionBean();
         versionBean.setId("1");
@@ -115,6 +236,7 @@ public class CatchFishService {
 
     private void updateHappyMember(List<String> happyMemberIds) {
         List<HappyFishRecordBean> fishList = happyFishRecordMapper.selectAll();
+        happyMemberIds = happyMemberIds.stream().distinct().collect(Collectors.toList());
         for (String id : happyMemberIds) {
             try {
                 Long l = Long.parseLong(id);
