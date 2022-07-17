@@ -9,7 +9,7 @@ import com.hxtscjk.lipcorn.mapper.HappyFishVersionMapper;
 import love.forte.common.ioc.annotation.Beans;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -62,7 +65,7 @@ public class CatchFishService {
     public List<String> sendCatchFishInf() throws InterruptedException {
         List<String> result = new ArrayList<>();
         List<String> ids = happyFishRecordMapper.selectAll().stream()
-                .filter(v -> v.getPlayerStatus() == 0)
+                .filter(v -> v.getPlayerStatus() == 0 && v.getDeleted().equals("0"))
                 .map(HappyFishRecordBean::getPlayerId)
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(ids)) {
@@ -94,7 +97,7 @@ public class CatchFishService {
             list.add("输入错误，请输入玩家id数字");
             return MessageUtil.stringToList(String.join( "\n", list));
         }
-        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList()));
         if (exist != null) {
             if (exist.getPlayerStatus() == 99) {
                 list.add("id" + id + "已在忽略状态中");
@@ -121,7 +124,7 @@ public class CatchFishService {
             list.add("输入错误，请输入玩家id数字");
             return MessageUtil.stringToList(String.join( "\n", list));
         }
-        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList()));
         if (exist != null) {
             list.add("id：" + exist.getPlayerId());
             list.add("姓名：" + exist.getPlayerName());
@@ -153,7 +156,7 @@ public class CatchFishService {
             list.add("输入错误，请输入玩家id数字");
             return MessageUtil.stringToList(String.join( "\n", list));
         }
-        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList()));
         if (exist != null) {
             if (exist.getPlayerStatus() == 2) {
                 list.add("[" + id + "]已在群内");
@@ -193,7 +196,7 @@ public class CatchFishService {
             list.add("输入错误，请输入玩家id数字");
             return MessageUtil.stringToList(String.join( "\n", list));
         }
-        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll());
+        HappyFishRecordBean exist = findIdExist(id, happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList()));
         if (exist != null) {
             if (exist.getPlayerStatus() == 2) {
                 list.add("[" + id + "]已在群内");
@@ -235,7 +238,7 @@ public class CatchFishService {
     }
 
     private void updateHappyMember(List<String> happyMemberIds) {
-        List<HappyFishRecordBean> fishList = happyFishRecordMapper.selectAll();
+        List<HappyFishRecordBean> fishList = happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         happyMemberIds = happyMemberIds.stream().distinct().collect(Collectors.toList());
         for (String id : happyMemberIds) {
             try {
@@ -250,7 +253,6 @@ public class CatchFishService {
                 insertFishInf(recordBean, 2);
             }
             else {
-                Example example = new Example(HappyFishRecordBean.class);
                 HappyFishRecordBean changeBean = new HappyFishRecordBean();
                 changeBean.setId(bean.getId());
                 changeBean.setPlayerStatus(2);
@@ -293,7 +295,7 @@ public class CatchFishService {
     public void pickFishAndUpdate(List<HappyFishRecordBean> oneFish) {
         //二筛去重，保留最新的
         List<HappyFishRecordBean> twoFish = simpFishList(oneFish);
-        List<HappyFishRecordBean> oldFish = happyFishRecordMapper.selectAll();
+        List<HappyFishRecordBean> oldFish = happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         for (HappyFishRecordBean fish : twoFish) {
             HappyFishRecordBean existFish = findIdExist(fish.getPlayerId(), oldFish);
             if (existFish == null) {
@@ -465,17 +467,17 @@ public class CatchFishService {
     public List<String> sendMessageWithChrome(List<String> playerIds) throws InterruptedException {
         //WebDriverManager.chromedriver().setup();
         playerIds.add("20998");
-        List<HappyFishRecordBean> allFishList = happyFishRecordMapper.selectAll();
+        List<HappyFishRecordBean> allFishList = happyFishRecordMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         List<String> resultList = new ArrayList<>();
-        System.setProperty("webdriver.chrome.driver",
-                "src/main/tools/chromedriver.exe");
-        WebDriver webDriver = new ChromeDriver();
+        System.setProperty("webdriver.gecko.driver",
+                "src/main/tools/geckodriver.exe");
+        WebDriver webDriver = new FirefoxDriver();
         //登录账号
         webDriver.get("http://saolei.wang/Player/Login.asp");
         TimeUnit.SECONDS.sleep(2);
-        webDriver.findElement(By.xpath("//*[@id=\"Window_Table\"]/tbody/tr/td/table[2]/tbody/tr/td[1]/input[1]")).sendKeys(myAccount);
-        webDriver.findElement(By.xpath("//*[@id=\"Window_Table\"]/tbody/tr/td/table[2]/tbody/tr/td[1]/input[2]")).sendKeys(myPassword);
-        webDriver.findElement(By.xpath("//*[@id=\"Window_Table\"]/tbody/tr/td/table[2]/tbody/tr/td[2]/table/tbody/tr/td")).click();
+        webDriver.findElement(By.xpath("/html/body/form/table/tbody/tr/td/table[2]/tbody/tr/td[1]/input[1]")).sendKeys(myAccount);
+        webDriver.findElement(By.xpath("/html/body/form/table/tbody/tr/td/table[2]/tbody/tr/td[1]/input[2]")).sendKeys(myPassword);
+        webDriver.findElement(By.xpath("/html/body/form/table/tbody/tr/td/table[2]/tbody/tr/td[2]/table")).click();
         TimeUnit.SECONDS.sleep(2);
         if (!CollectionUtils.isEmpty(playerIds)) {
             for (String id : playerIds) {

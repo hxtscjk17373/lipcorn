@@ -27,7 +27,7 @@ public class MemberCommonService {
     private FillBlankMapper fillBlankMapper;
 
     private boolean checkTodayTimes(String qq) {
-        List<MemberNickBean> nicks = memberNickMapper.selectAll();
+        List<MemberNickBean> nicks = memberNickMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(nicks.stream().filter(v -> v.getQqNumber().equals(qq)).collect(Collectors.toList()))) {
             return false;
         }
@@ -79,7 +79,7 @@ public class MemberCommonService {
             result.add("随机群员数量限制1-5个哦");
             return MessageUtil.stringToList(String.join("\n", result));
         }
-        List<MemberNickBean> memberNicks = memberNickMapper.selectAll();
+        List<MemberNickBean> memberNicks = memberNickMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         Collections.shuffle(memberNicks);
         for (int i = 0; i < num; i++) {
             result.add(memberNicks.get(i).getNickName());
@@ -106,7 +106,7 @@ public class MemberCommonService {
                 result.add("最多包含10个填充昵称，请重新输入");
                 return MessageUtil.stringToList(String.join("\n", result));
             }
-            List<MemberNickBean> memberNicks = memberNickMapper.selectAll();
+            List<MemberNickBean> memberNicks = memberNickMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
             Collections.shuffle(memberNicks);
             int timeCount = 0;
             while(inputStr.contains("xx")) {

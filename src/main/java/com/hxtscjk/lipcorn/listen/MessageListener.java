@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tk.mybatis.mapper.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -111,6 +112,44 @@ public class MessageListener implements LipcornConst {
                 sendMessage(catchFishService.getFishStatus(commandText), groupMsg, sender);
             }
         }
+    }
+
+    @OnGroup
+    @Filter(groups = {GROUP_HAPPY_NUMBER, GROUP_TEST_NUMBER})
+    public void GroupMsg3(GroupMsg groupMsg, MsgSender sender) throws InterruptedException {
+        log.info("received message : {}", groupMsg.getMsg());
+        String msg = groupMsg.getMsg();
+        MessageUtil messageUtil = new MessageUtil();
+        int messageType = messageUtil.checkMessage(msg);
+        if (messageType == 1) {
+            String commandText = messageUtil.getCommandType(msg);
+            if (commandText.contains("http://www.saolei.wang/Player/Index.asp?Id=12689(群员)")) {
+                sendMessage("我要求把群员改成群主", groupMsg, sender);
+            }
+        }
+        if (messageType == 2 || messageType == 3) {
+            String commandType = messageUtil.getCommandType(msg);
+            String commandText = messageUtil.getCommandText(msg);
+            String commandValue = messageUtil.getCommandValue(msg);
+            //测试内容是否已分离出
+            if (commandType.equals("QQ号") || commandType.equals("qq号")) {
+                sendMessage(getHappyMemberQqNumber(commandText, sender), groupMsg, sender);
+            }
+        }
+    }
+
+    public List<String> getHappyMemberQqNumber(String id, MsgSender sender) {
+        List<GroupMemberInfo> memberList = sender.GETTER.getGroupMemberList("585808410").getResults().stream().filter(v -> v.getAccountTitle().equals(id)).collect(Collectors.toList());
+        List<String> result = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(memberList)) {
+            result.add("本群中id=" + id + "的群成员QQ号如下：");
+            for (GroupMemberInfo info : memberList) {
+                result.add(info.getAccountCode());
+            }
+        } else {
+            result.add("未查询到");
+        }
+        return MessageUtil.stringToList(String.join("\n", result));
     }
 
     private List<String> getHappyMember(MsgSender sender) {

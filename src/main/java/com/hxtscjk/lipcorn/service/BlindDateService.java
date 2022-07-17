@@ -210,7 +210,7 @@ public class BlindDateService implements LipcornConst {
     }
 
     public List<String> getCoupleInf() {
-        List <BlindDateBean> list = blindDateMapper.selectAll();
+        List <BlindDateBean> list = blindDateMapper.selectAll().stream().filter(v -> v.getDeleted().equals("0")).collect(Collectors.toList());
         List <List<BlindDateBean>> successList = new ArrayList<>();//成功列表
         List <List<BlindDateBean>> adjustList = new ArrayList<>();//调剂列表
         List <BlindDateBean> waitList = new ArrayList<>();//等待列表
